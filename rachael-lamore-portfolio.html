@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rachael Lamore — Product Manager & User Researcher</title>
+<meta name="description" content="Portfolio of Rachael Lamore, Product Manager and User Researcher based in South Lake Tahoe, CA.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Syne:wght@400;500;700;800&family=JetBrains+Mono:wght@300;400&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --biolum: #00ffe7;
+    --biolum2: #7b2ff7;
+    /* ADA: All text colors pass WCAG AA (4.5:1) on dark backgrounds */
+    --text-primary: #ffffff;
+    --text-secondary: #c8dde6;   /* lifted from 0.5 opacity — passes AA */
+    --text-body: #d4e8f0;        /* lifted from 0.65/0.8 opacity — passes AA */
+    --text-muted: #9bbccc;       /* lifted from 0.35/0.45 opacity — passes AA */
+    --abyss: #020d1a;
+  }
+
+  html { scroll-behavior: smooth; }
+  body { font-family: 'Syne', sans-serif; background: var(--abyss); color: var(--text-primary); overflow-x: hidden; }
+
+  /* ADA: Skip link for keyboard users */
+  .skip-link {
+    position: absolute; top: -100px; left: 16px; z-index: 10000;
+    background: var(--biolum); color: #000; padding: 12px 20px;
+    font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 700;
+    text-decoration: none; border-radius: 2px; transition: top 0.2s;
+  }
+  .skip-link:focus { top: 16px; }
+
+  /* ADA: Custom cursor only for pointer devices — keyboard users keep native cursor */
+  #cursor, #cursor-ring { display: none; }
+  @media (pointer: fine) {
+    body.has-mouse * { cursor: none !important; }
+    body.has-mouse #cursor { display: block; }
+    body.has-mouse #cursor-ring { display: block; }
+  }
+  #cursor {
+    position: fixed; width: 12px; height: 12px; border-radius: 50%;
+    background: var(--biolum); pointer-events: none; z-index: 9999;
+    transform: translate(-50%,-50%); transition: transform 0.1s;
+    mix-blend-mode: screen; box-shadow: 0 0 20px var(--biolum), 0 0 40px var(--biolum);
+  }
+  #cursor-ring {
+    position: fixed; width: 36px; height: 36px; border-radius: 50%;
+    border: 1px solid rgba(0,255,231,0.4); pointer-events: none; z-index: 9998;
+    transform: translate(-50%,-50%); transition: width 0.25s, height 0.25s;
+  }
+
+  /* ADA: Visible focus styles for keyboard navigation */
+  :focus-visible {
+    outline: 2px solid var(--biolum) !important;
+    outline-offset: 4px !important;
+    border-radius: 2px;
+  }
+
+  #depth-bg { position: fixed; inset: 0; z-index: -2; background: linear-gradient(to bottom, #b8e8f8 0%, #7ec8e3 8%, #3a9bbf 18%, #1a6b8a 30%, #0d4a6b 42%, #062d4a 55%, #031a30 68%, #020d1a 80%, #010508 100%); }
+
+  #caustics { position: fixed; inset: 0; z-index: -1; opacity: 0; background-image: radial-gradient(ellipse 80px 60px at 20% 30%, rgba(255,255,255,0.15) 0%, transparent 70%), radial-gradient(ellipse 60px 80px at 70% 20%, rgba(255,255,255,0.12) 0%, transparent 70%), radial-gradient(ellipse 100px 50px at 50% 60%, rgba(255,255,255,0.08) 0%, transparent 70%); pointer-events: none; transition: opacity 0.5s; }
+  /* ADA: Respect prefers-reduced-motion for all animations */
+  @media (prefers-reduced-motion: no-preference) {
+    #caustics { animation: caustic-drift 8s ease-in-out infinite alternate; }
+    .surface-shimmer { animation: shimmer 4s ease-in-out infinite; }
+    .dive-arrow { animation: bob 2s ease-in-out infinite; }
+  }
+  @keyframes caustic-drift { 0% { background-position: 0% 0%, 10% 5%, 5% 10%; transform: scaleX(1); } 100% { background-position: 5% 3%, 15% 0%, 0% 15%; transform: scaleX(1.04); } }
+  @keyframes shimmer { 0%,100% { opacity: 0.6; } 50% { opacity: 1; } }
+  @keyframes bob { 0%,100% { transform: translateY(0); } 50% { transform: translateY(5px); } }
+
+  canvas#particles-canvas { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
+
+  #depth-meter { position: fixed; right: 28px; top: 50%; transform: translateY(-50%); z-index: 100; display: flex; flex-direction: column; align-items: center; gap: 8px; }
+  .depth-label { font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 0.1em; color: var(--text-secondary); writing-mode: vertical-rl; text-transform: uppercase; }
+  #depth-track { width: 2px; height: 180px; background: rgba(255,255,255,0.15); border-radius: 2px; position: relative; overflow: hidden; }
+  #depth-fill { position: absolute; bottom: 0; left: 0; width: 100%; background: linear-gradient(to top, var(--biolum), transparent); transition: height 0.4s ease; border-radius: 2px; box-shadow: 0 0 8px var(--biolum); }
+  #depth-value { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--biolum); letter-spacing: 0.05em; }
+
+  #progress-bar { position: fixed; top: 0; left: 0; right: 0; height: 3px; background: rgba(255,255,255,0.05); z-index: 300; }
+  #pressure-fill { height: 100%; background: linear-gradient(to right, var(--biolum), var(--biolum2)); width: 0%; transition: width 0.1s; box-shadow: 0 0 8px var(--biolum); }
+
+  nav { position: fixed; top: 0; left: 0; right: 0; z-index: 200; padding: 24px 48px; display: flex; justify-content: space-between; align-items: center; background: linear-gradient(to bottom, rgba(0,0,0,0.3), transparent); transition: backdrop-filter 0.5s, background 0.5s; }
+  nav.scrolled { backdrop-filter: blur(12px); background: rgba(2,13,26,0.7); }
+  .nav-logo { font-family: 'Cormorant Garamond', serif; font-size: 22px; font-weight: 300; letter-spacing: 0.15em; color: white; text-decoration: none; }
+  .nav-logo span { color: var(--biolum); }
+  .nav-links { display: flex; gap: 36px; }
+  .nav-links a { font-size: 11px; font-weight: 500; letter-spacing: 0.18em; text-transform: uppercase; color: var(--text-secondary); text-decoration: none; transition: color 0.3s; position: relative; }
+  .nav-links a::after { content: ''; position: absolute; bottom: -4px; left: 0; width: 0; height: 1px; background: var(--biolum); transition: width 0.3s; }
+  .nav-links a:hover, .nav-links a:focus-visible { color: var(--biolum); }
+  .nav-links a:hover::after, .nav-links a:focus-visible::after { width: 100%; }
+
+  section { min-height: 100vh; position: relative; z-index: 10; display: flex; flex-direction: column; justify-content: center; padding: 100px 10vw; }
+
+  #hero { min-height: 100vh; display: flex; flex-direction: column; justify-content: center; padding: 0 10vw; position: relative; overflow: hidden; }
+  .surface-shimmer { position: absolute; top: 0; left: 0; right: 0; height: 200px; background: linear-gradient(to bottom, rgba(255,255,255,0.25) 0%, rgba(255,255,255,0.05) 60%, transparent 100%); }
+  .hero-depth-tag { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.2em; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 24px; display: flex; align-items: center; gap: 12px; }
+  .hero-depth-tag::before { content: ''; width: 40px; height: 1px; background: rgba(255,255,255,0.4); }
+  h1 { font-family: 'Cormorant Garamond', serif; font-size: clamp(60px,9vw,120px); font-weight: 300; line-height: 0.95; letter-spacing: -0.02em; color: white; }
+  h1 em { font-style: italic; color: rgba(255,255,255,0.85); }
+  .hero-sub { margin-top: 32px; }
+  .hero-sub p { font-size: 14px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--text-secondary); max-width: 520px; line-height: 2; }
+  .dive-cta { margin-top: 60px; display: inline-flex; align-items: center; gap: 14px; font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--biolum); text-decoration: none; border: 1px solid rgba(0,255,231,0.4); padding: 14px 28px; border-radius: 2px; transition: all 0.3s; width: fit-content; }
+  .dive-cta:hover, .dive-cta:focus-visible { background: rgba(0,255,231,0.1); border-color: var(--biolum); box-shadow: 0 0 30px rgba(0,255,231,0.2); }
+  .dive-arrow { display: inline-block; }
+
+  .zone-label { position: absolute; left: 10vw; top: 30px; font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.25em; text-transform: uppercase; color: var(--text-muted); }
+  .section-eyebrow { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.3em; text-transform: uppercase; color: var(--biolum); margin-bottom: 16px; display: flex; align-items: center; gap: 12px; }
+  .section-eyebrow::before { content: ''; width: 24px; height: 1px; background: var(--biolum); }
+  h2 { font-family: 'Cormorant Garamond', serif; font-size: clamp(42px,5vw,72px); font-weight: 300; line-height: 1.05; color: white; margin-bottom: 48px; }
+  h2 em { font-style: italic; color: rgba(255,255,255,0.75); }
+
+  .depth-divider { position: relative; height: 1px; background: linear-gradient(to right, transparent, rgba(255,255,255,0.08), transparent); overflow: visible; }
+  .depth-divider .depth-reading { position: absolute; right: 10vw; top: -8px; font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 0.2em; color: var(--text-muted); padding: 0 8px; }
+
+  .about-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: start; }
+  .about-text p { font-family: 'Cormorant Garamond', serif; font-size: 22px; font-weight: 300; line-height: 1.7; color: var(--text-body); margin-bottom: 20px; }
+  .about-text p strong { font-weight: 600; color: white; }
+  /* ADA: use dl for key-value facts */
+  .about-facts { display: flex; flex-direction: column; gap: 24px; padding-top: 16px; }
+  .fact-item { border-left: 1px solid rgba(0,255,231,0.35); padding-left: 20px; }
+  .fact-label { font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--biolum); margin-bottom: 6px; }
+  .fact-value { font-family: 'Cormorant Garamond', serif; font-size: 17px; color: var(--text-body); line-height: 1.5; }
+  .fact-value a { color: var(--biolum); text-underline-offset: 3px; }
+  /* ADA: skills as list */
+  .skills-row { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 36px; list-style: none; padding: 0; }
+  .skill-chip { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; padding: 8px 16px; border: 1px solid rgba(255,255,255,0.2); border-radius: 2px; color: var(--text-secondary); transition: all 0.3s; background: rgba(255,255,255,0.05); }
+  .skill-chip:hover { border-color: var(--biolum); color: var(--biolum); background: rgba(0,255,231,0.08); }
+
+  /* ADA: timeline as ordered list */
+  .timeline { position: relative; padding-left: 32px; list-style: none; }
+  .timeline::before { content: ''; position: absolute; left: 0; top: 8px; bottom: 0; width: 1px; background: linear-gradient(to bottom, rgba(0,255,231,0.4), transparent); }
+  .timeline-item { position: relative; margin-bottom: 56px; opacity: 0; transform: translateX(-20px); transition: opacity 0.6s, transform 0.6s; }
+  .timeline-item.visible { opacity: 1; transform: translateX(0); }
+  @media (prefers-reduced-motion: reduce) { .timeline-item { transform: none !important; transition: opacity 0.4s; } }
+  .timeline-dot { position: absolute; left: -38px; top: 6px; width: 12px; height: 12px; border-radius: 50%; background: var(--abyss); border: 2px solid var(--biolum); box-shadow: 0 0 12px rgba(0,255,231,0.4); }
+  .job-header { display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
+  .job-title { font-family: 'Cormorant Garamond', serif; font-size: 24px; font-weight: 400; color: white; }
+  .job-period { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.15em; color: var(--biolum); }
+  .job-company { font-size: 12px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 14px; }
+  .job-desc { font-family: 'Cormorant Garamond', serif; font-size: 17px; line-height: 1.65; color: var(--text-body); max-width: 680px; }
+  .job-tags { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; list-style: none; padding: 0; }
+  .job-tag { font-family: 'JetBrains Mono', monospace; font-size: 9px; padding: 4px 10px; letter-spacing: 0.1em; background: rgba(0,255,231,0.07); border: 1px solid rgba(0,255,231,0.25); border-radius: 2px; color: #7de8dc; }
+
+  .publications { margin-top: 60px; padding-top: 40px; border-top: 1px solid rgba(255,255,255,0.08); }
+  .pub-section-title { font-family: 'Cormorant Garamond', serif; font-size: clamp(28px,3.5vw,48px); font-weight: 300; color: white; margin-bottom: 32px; }
+  .pub-section-title em { font-style: italic; color: rgba(255,255,255,0.75); }
+  .pub-item { border-left: 1px solid rgba(0,255,231,0.25); padding-left: 24px; margin-bottom: 32px; opacity: 0; transform: translateX(-12px); transition: opacity 0.6s, transform 0.6s; }
+  .pub-item.visible { opacity: 1; transform: translateX(0); }
+  @media (prefers-reduced-motion: reduce) { .pub-item { transform: none !important; transition: opacity 0.4s; } }
+  .pub-type { font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--biolum); margin-bottom: 8px; }
+  .pub-name { font-family: 'Cormorant Garamond', serif; font-size: 18px; font-style: italic; color: var(--text-body); line-height: 1.5; margin-bottom: 6px; }
+  .pub-detail { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--text-muted); letter-spacing: 0.04em; line-height: 1.6; }
+
+  .projects-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 24px; }
+  .project-card { position: relative; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.03); padding: 36px; transition: border-color 0.4s, transform 0.4s, box-shadow 0.4s; overflow: hidden; opacity: 0; transform: translateY(30px); }
+  .project-card.visible { opacity: 1; transform: translateY(0); }
+  @media (prefers-reduced-motion: reduce) { .project-card { transform: none !important; transition: opacity 0.4s, border-color 0.3s; } }
+  .project-card::before { content: ''; position: absolute; inset: 0; background: radial-gradient(ellipse at top left, rgba(0,255,231,0.06), transparent 60%); opacity: 0; transition: opacity 0.4s; }
+  .project-card:hover, .project-card:focus-within { border-color: rgba(0,255,231,0.3); transform: translateY(-4px); box-shadow: 0 20px 60px rgba(0,0,0,0.4), 0 0 0 1px rgba(0,255,231,0.1); }
+  .project-card:hover::before, .project-card:focus-within::before { opacity: 1; }
+  .project-num { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: rgba(0,255,231,0.5); margin-bottom: 24px; letter-spacing: 0.1em; }
+  .project-title { font-family: 'Cormorant Garamond', serif; font-size: 26px; font-weight: 400; color: white; margin-bottom: 14px; line-height: 1.15; }
+  .project-desc { font-family: 'Cormorant Garamond', serif; font-size: 16px; line-height: 1.65; color: var(--text-body); margin-bottom: 24px; }
+  .project-stack { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; list-style: none; padding: 0; }
+  .stack-item { font-family: 'JetBrains Mono', monospace; font-size: 9px; padding: 3px 8px; color: var(--text-secondary); border: 1px solid rgba(255,255,255,0.15); border-radius: 2px; letter-spacing: 0.1em; }
+  .project-impact { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.08em; color: var(--biolum); line-height: 1.5; }
+
+  #contact { min-height: 80vh; text-align: center; align-items: center; padding-bottom: 100px; }
+  .contact-inner { max-width: 600px; }
+  .contact-desc { font-family: 'Cormorant Garamond', serif; font-size: 20px; line-height: 1.7; color: var(--text-body); margin-bottom: 48px; }
+  .contact-links { display: flex; justify-content: center; gap: 16px; flex-wrap: wrap; }
+  .contact-btn { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--text-primary); text-decoration: none; padding: 16px 28px; border: 1px solid rgba(255,255,255,0.25); border-radius: 2px; transition: all 0.3s; background: rgba(255,255,255,0.04); }
+  .contact-btn:hover, .contact-btn:focus-visible { border-color: var(--biolum); color: var(--biolum); background: rgba(0,255,231,0.06); box-shadow: 0 0 30px rgba(0,255,231,0.1); }
+  .contact-btn.primary { background: rgba(0,255,231,0.1); border-color: rgba(0,255,231,0.5); color: var(--biolum); }
+  .contact-btn.primary:hover, .contact-btn.primary:focus-visible { background: rgba(0,255,231,0.18); box-shadow: 0 0 40px rgba(0,255,231,0.2); }
+
+  /* ADA: Content visible by default; JS adds js-ready to enable scroll reveals */
+  .fade-in { opacity: 1; transition: opacity 0.8s ease, transform 0.8s ease; }
+  .fade-in.js-ready { opacity: 0; transform: translateY(24px); }
+  .fade-in.visible { opacity: 1 !important; transform: translateY(0) !important; }
+  @media (prefers-reduced-motion: reduce) { .fade-in { transform: none !important; transition: opacity 0.4s; } }
+
+  footer { text-align: center; padding: 40px; font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--text-muted); }
+
+  /* ── MOBILE NAV ── */
+  .nav-toggle {
+    display: none;
+    background: none; border: 1px solid rgba(0,255,231,0.35);
+    color: var(--biolum); padding: 8px 12px; border-radius: 2px;
+    font-family: 'JetBrains Mono', monospace; font-size: 11px;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    transition: background 0.2s;
+  }
+  .nav-toggle:hover, .nav-toggle:focus-visible { background: rgba(0,255,231,0.1); }
+  /* Mobile drawer */
+  @media (max-width: 768px) {
+    nav { padding: 20px 24px; }
+    .nav-toggle { display: block; }
+    .nav-links {
+      display: none; flex-direction: column; gap: 0;
+      position: fixed; top: 0; right: 0; bottom: 0; width: min(280px, 80vw);
+      background: rgba(2,13,26,0.97); backdrop-filter: blur(16px);
+      padding: 80px 32px 32px; z-index: 190;
+      border-left: 1px solid rgba(0,255,231,0.15);
+      transform: translateX(100%); transition: transform 0.3s ease;
+    }
+    .nav-links.open { display: flex; transform: translateX(0); }
+    .nav-links a {
+      font-size: 14px; padding: 16px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.07);
+      color: var(--text-secondary);
+    }
+    .nav-links a:last-child { border-bottom: none; }
+    /* Overlay */
+    .nav-overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,0.6); z-index: 185;
+    }
+    .nav-overlay.open { display: block; }
+    section { padding: 80px 6vw; }
+    .about-grid { grid-template-columns: 1fr; gap: 40px; }
+    .projects-grid { grid-template-columns: 1fr; }
+    #depth-meter { display: none; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .nav-links { transition: none; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ADA: Skip link -->
+<a href="#main-content" class="skip-link">Skip to main content</a>
+
+<div id="cursor" aria-hidden="true"></div>
+<div id="cursor-ring" aria-hidden="true"></div>
+<div id="depth-bg" aria-hidden="true"></div>
+<div id="caustics" aria-hidden="true"></div>
+<canvas id="particles-canvas" aria-hidden="true"></canvas>
+
+<!-- ADA: Progress bar with ARIA roles -->
+<div id="progress-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-label="Page scroll progress">
+  <div id="pressure-fill"></div>
+</div>
+
+<!-- ADA: Decorative depth meter hidden from AT -->
+<div id="depth-meter" aria-hidden="true">
+  <div class="depth-label">Depth</div>
+  <div id="depth-track"><div id="depth-fill" style="height:0%"></div></div>
+  <div id="depth-value">0m</div>
+</div>
+
+<!-- ADA: nav landmark with aria-label -->
+<div class="nav-overlay" id="nav-overlay" aria-hidden="true"></div>
+<nav id="nav" aria-label="Site navigation">
+  <a href="#hero" class="nav-logo" aria-label="Rachael Lamore — return to top">R<span aria-hidden="true">.</span>Lamore</a>
+  <button class="nav-toggle" id="nav-toggle" aria-controls="nav-links" aria-expanded="false" aria-label="Open navigation menu">Menu</button>
+  <div class="nav-links" id="nav-links">
+    <a href="#about">About</a>
+    <a href="#experience">Experience</a>
+    <a href="#projects">Projects</a>
+    <a href="#contact">Contact</a>
+  </div>
+</nav>
+
+<!-- ADA: main landmark -->
+<main id="main-content">
+
+  <!-- HERO -->
+  <section id="hero" aria-label="Introduction">
+    <div class="surface-shimmer" aria-hidden="true"></div>
+    <p class="hero-depth-tag" aria-hidden="true">Surface Level · 0m</p>
+    <h1>Rachael<br><em>Lamore</em></h1>
+    <div class="hero-sub">
+      <p>Product Manager &amp; User Researcher — translating complex systems into human-centered experiences. Rooted in science. Driven by insight.</p>
+    </div>
+    <a href="#about" class="dive-cta">
+      Dive In <span class="dive-arrow" aria-hidden="true">↓</span>
+    </a>
+  </section>
+
+  <div class="depth-divider" aria-hidden="true"><span class="depth-reading">— 20m — Sunlight Zone —</span></div>
+
+  <!-- ABOUT -->
+  <section id="about" aria-labelledby="about-heading">
+    <p class="zone-label" aria-hidden="true">Epipelagic Zone · 0–200m</p>
+    <p class="section-eyebrow" aria-hidden="true">About Me</p>
+    <h2 id="about-heading" class="fade-in">Scientific rigor,<br><em>human instinct.</em></h2>
+    <div class="about-grid fade-in">
+      <div class="about-text">
+        <p>I'm a <strong>product manager and user researcher</strong> with a rare combination of scientific training, data fluency, and genuine curiosity about how people think and make decisions.</p>
+        <p>My background spans marine biology, multi-year field research, consumer insight, and data analysis — giving me a systems-level perspective I bring to every product challenge. I know how to ask the right questions, synthesize ambiguous data, and translate it into something teams can act on.</p>
+        <p>Based in South Lake Tahoe, CA. Open to remote and hybrid opportunities.</p>
+        <!-- ADA: semantic list for skills -->
+        <ul class="skills-row" aria-label="Core skills">
+          <li class="skill-chip">User Research</li>
+          <li class="skill-chip">Consumer Insights</li>
+          <li class="skill-chip">Data Analysis</li>
+          <li class="skill-chip">R Studio</li>
+          <li class="skill-chip">ArcGIS Field Maps</li>
+          <li class="skill-chip">Excel / Sheets</li>
+          <li class="skill-chip">SEO Strategy</li>
+          <li class="skill-chip">Project Management</li>
+          <li class="skill-chip">Cross-functional Comms</li>
+          <li class="skill-chip">Technical Writing</li>
+          <li class="skill-chip">Stakeholder Management</li>
+          <li class="skill-chip">ImageJ · CPCe</li>
+        </ul>
+      </div>
+      <!-- ADA: dl for key-value facts -->
+      <dl class="about-facts">
+        <div class="fact-item">
+          <dt class="fact-label">Currently</dt>
+          <dd class="fact-value">Senior Research Analyst @ GearLab</dd>
+        </div>
+        <div class="fact-item">
+          <dt class="fact-label">Education</dt>
+          <dd class="fact-value">B.S. Biology, Spanish Minor<br>Cal Poly San Luis Obispo, 2015–2020</dd>
+        </div>
+        <div class="fact-item">
+          <dt class="fact-label">Core Strength</dt>
+          <dd class="fact-value">Communicating complex technical findings to non-technical audiences</dd>
+        </div>
+        <div class="fact-item">
+          <dt class="fact-label">Research Background</dt>
+          <dd class="fact-value">Consumer behavior · Coral reef ecology · Marine invasive species · Sustainable energy</dd>
+        </div>
+        <div class="fact-item">
+          <dt class="fact-label">Contact</dt>
+          <dd class="fact-value">
+            <a href="mailto:rlamore2323@gmail.com">rlamore2323@gmail.com</a><br>
+            <a href="tel:4086938949">408-693-8949</a>
+          </dd>
+        </div>
+      </dl>
+    </div>
+  </section>
+
+  <div class="depth-divider" aria-hidden="true"><span class="depth-reading">— 200m — Twilight Zone —</span></div>
+
+  <!-- EXPERIENCE -->
+  <section id="experience" aria-labelledby="experience-heading">
+    <p class="zone-label" aria-hidden="true">Mesopelagic Zone · 200–1000m</p>
+    <p class="section-eyebrow" aria-hidden="true">Experience</p>
+    <h2 id="experience-heading" class="fade-in">From the field<br><em>to the product.</em></h2>
+    <!-- ADA: timeline as ordered list -->
+    <ol class="timeline fade-in" aria-label="Work history, most recent first">
+
+      <li class="timeline-item">
+        <div class="timeline-dot" aria-hidden="true"></div>
+        <div class="job-header">
+          <h3 class="job-title">Senior Research Analyst</h3>
+          <time class="job-period" datetime="2023-11">Nov. 2023 — Present</time>
+        </div>
+        <p class="job-company">GearLab</p>
+        <p class="job-desc">Led high-priority consumer research projects end-to-end — setting research plans and timelines, synthesizing behavioral insights, and translating findings into actionable product and content strategy. Drove measurable traffic growth across competitive categories through SEO-informed consumer insight. Delivered high-quality data outputs with a strong emphasis on accuracy, fact-checking, and stakeholder communication.</p>
+        <ul class="job-tags" aria-label="Skills used">
+          <li class="job-tag">Consumer Research</li><li class="job-tag">Project Leadership</li><li class="job-tag">SEO Strategy</li><li class="job-tag">Data Synthesis</li><li class="job-tag">Competitive Analysis</li>
+        </ul>
+      </li>
+
+      <li class="timeline-item">
+        <div class="timeline-dot" aria-hidden="true"></div>
+        <div class="job-header">
+          <h3 class="job-title">Marine Technician</h3>
+          <time class="job-period" datetime="2023">Summer 2023</time>
+        </div>
+        <p class="job-company">Marine Taxonomic Services</p>
+        <p class="job-desc">Conducted aquatic invasive species surveillance and removal as a certified scientific diver. Operated autonomously in dynamic field conditions, maintaining rigorous data entry and quality control standards. Developed the observational precision and systematic execution that underpins great user research fieldwork.</p>
+        <ul class="job-tags" aria-label="Skills used">
+          <li class="job-tag">Field Research</li><li class="job-tag">Data QA/QC</li><li class="job-tag">Autonomous Execution</li><li class="job-tag">ArcGIS Field Maps</li>
+        </ul>
+      </li>
+
+      <li class="timeline-item">
+        <div class="timeline-dot" aria-hidden="true"></div>
+        <div class="job-header">
+          <h3 class="job-title">Administrative &amp; Marketing Coordinator</h3>
+          <time class="job-period" datetime="2020-07">July 2020 — June 2021</time>
+        </div>
+        <p class="job-company">BioSpirit Spa</p>
+        <p class="job-desc">Owned the full client experience — from first digital touchpoint to appointment completion. Managed scheduling systems, maintained marketing content and website updates, and served as the primary point of contact for all service inquiries. Built a strong intuition for anticipating client needs before they were articulated — a direct precursor to discovery research in product work.</p>
+        <ul class="job-tags" aria-label="Skills used">
+          <li class="job-tag">Client Journey</li><li class="job-tag">Marketing</li><li class="job-tag">Website Management</li><li class="job-tag">Service Design</li>
+        </ul>
+      </li>
+
+      <li class="timeline-item">
+        <div class="timeline-dot" aria-hidden="true"></div>
+        <div class="job-header">
+          <h3 class="job-title">Parrotfish Research Assistant</h3>
+          <time class="job-period">2016, 2017, 2019</time>
+        </div>
+        <p class="job-company">California Polytechnic University, San Luis Obispo</p>
+        <p class="job-desc">Compiled and analyzed multi-year datasets on parrotfish corallivory and herbivory using CPCe, ImageJ, and R Studio. Collaborated across a research team to meet publication deadlines, peer-review findings, and produce polished reports. Presented findings at the Western Naturalists Conference — communicating ecological complexity to a broad scientific audience.</p>
+        <ul class="job-tags" aria-label="Skills used">
+          <li class="job-tag">Quantitative Analysis</li><li class="job-tag">R Studio</li><li class="job-tag">Data Visualization</li><li class="job-tag">Cross-team Collaboration</li><li class="job-tag">Public Presentation</li>
+        </ul>
+      </li>
+
+      <li class="timeline-item">
+        <div class="timeline-dot" aria-hidden="true"></div>
+        <div class="job-header">
+          <h3 class="job-title">Undergraduate Research Assistant</h3>
+          <time class="job-period" datetime="2015">Sept. — Dec. 2015</time>
+        </div>
+        <p class="job-company">Water Energy &amp; Sustainability Training Team · Cal Poly SLO</p>
+        <p class="job-desc">Contributed to applied research on algae-based biofuel production. Responsible for chemical and biological oxygen demand laboratory testing — developing the experimental discipline and comfort with ambiguity that informs how I approach complex product and research problems today.</p>
+        <ul class="job-tags" aria-label="Skills used">
+          <li class="job-tag">Lab Research</li><li class="job-tag">Sustainability</li><li class="job-tag">Experimental Methods</li>
+        </ul>
+      </li>
+
+    </ol>
+
+    <div class="publications">
+      <h2 class="pub-section-title fade-in">Published &amp; <em>presented work.</em></h2>
+      <article class="pub-item">
+        <p class="pub-type">Conference Poster · Western Naturalists</p>
+        <p class="pub-name">Context Dependent Variation in Parrotfish Corallivory on Endangered Orbicella annularis Corals Across Caribbean Reefs</p>
+      </article>
+      <article class="pub-item">
+        <p class="pub-type">Co-authored Report · NOAA Channel Islands (Internal Review)</p>
+        <p class="pub-name">Defining and Quantifying Sense of Place: How We Can Apply It to the Channel Islands National Marine Sanctuary</p>
+      </article>
+      <article class="pub-item">
+        <p class="pub-type">Co-authored Paper · In Prep — Target Journal: Coral Reefs</p>
+        <p class="pub-name">Ecological Drivers of Parrotfish Corallivory Across Multiple Spatial Scales in the Greater Caribbean</p>
+        <p class="pub-detail">Rempel HS, Barton EM, Hale TC, Lamore RJ, Bodwin KN, Adam TC, Burkepile DE, Ruttenberg BI.</p>
+      </article>
+    </div>
+  </section>
+
+  <div class="depth-divider" aria-hidden="true"><span class="depth-reading">— 1000m — Midnight Zone —</span></div>
+
+  <!-- PROJECTS -->
+  <section id="projects" aria-labelledby="projects-heading">
+    <p class="zone-label" aria-hidden="true">Bathypelagic Zone · 1000–4000m</p>
+    <p class="section-eyebrow" aria-hidden="true">Research Highlights</p>
+    <h2 id="projects-heading" class="fade-in">Work that <em>surfaces</em><br>real insight.</h2>
+    <div class="projects-grid">
+
+      <article class="project-card">
+        <p class="project-num" aria-hidden="true">01 —</p>
+        <h3 class="project-title">Consumer-Led Product Strategy</h3>
+        <p class="project-desc">Led end-to-end consumer research at GearLab, translating behavioral patterns into product positioning and content strategy. Developed frameworks that connected user intent to measurable traffic outcomes across competitive categories.</p>
+        <ul class="project-stack" aria-label="Methods and tools">
+          <li class="stack-item">Consumer Research</li><li class="stack-item">SEO</li><li class="stack-item">Competitive Intel</li><li class="stack-item">Excel</li>
+        </ul>
+        <p class="project-impact">↑ Traffic growth across multiple high-priority product categories</p>
+      </article>
+
+      <article class="project-card">
+        <p class="project-num" aria-hidden="true">02 —</p>
+        <h3 class="project-title">Caribbean Reef Ecology — Multi-Scale Study</h3>
+        <p class="project-desc">Co-led a multi-year, multi-site ecological study on parrotfish feeding behavior across Caribbean reef systems. Synthesized large spatial datasets, built visualizations in R Studio, and coordinated a cross-institutional team toward peer-reviewed publication.</p>
+        <ul class="project-stack" aria-label="Methods and tools">
+          <li class="stack-item">R Studio</li><li class="stack-item">CPCe</li><li class="stack-item">ImageJ</li><li class="stack-item">Spatial Data</li>
+        </ul>
+        <p class="project-impact">In prep · Coral Reefs journal · Multi-institutional team</p>
+      </article>
+
+      <article class="project-card">
+        <p class="project-num" aria-hidden="true">03 —</p>
+        <h3 class="project-title">Sense of Place — NOAA Framework</h3>
+        <p class="project-desc">Co-authored a report for NOAA Channel Islands exploring how to define and quantify "sense of place" — translating a deeply qualitative concept into measurable frameworks usable for policy and resource management decisions.</p>
+        <ul class="project-stack" aria-label="Methods and tools">
+          <li class="stack-item">Qualitative Research</li><li class="stack-item">Framework Design</li><li class="stack-item">Policy Writing</li>
+        </ul>
+        <p class="project-impact">Reviewed by NOAA Channel Islands National Marine Sanctuary</p>
+      </article>
+
+      <article class="project-card">
+        <p class="project-num" aria-hidden="true">04 —</p>
+        <h3 class="project-title">Invasive Species Surveillance Program</h3>
+        <p class="project-desc">Designed and executed field data collection for aquatic invasive species monitoring as a scientific diver. Maintained rigorous data integrity under physically demanding conditions — building the quality control discipline that informs all research work.</p>
+        <ul class="project-stack" aria-label="Methods and tools">
+          <li class="stack-item">Field Research</li><li class="stack-item">Data QA/QC</li><li class="stack-item">ArcGIS Field Maps</li>
+        </ul>
+        <p class="project-impact">Marine Taxonomic Services · Summer 2023</p>
+      </article>
+
+      <article class="project-card">
+        <p class="project-num" aria-hidden="true">05 —</p>
+        <h3 class="project-title">Client Experience Ownership</h3>
+        <p class="project-desc">At BioSpirit Spa, took ownership of the full client journey — structuring how clients discovered, researched, and booked services. Managed website, marketing, and real-time scheduling. An early lesson in end-to-end experience design.</p>
+        <ul class="project-stack" aria-label="Methods and tools">
+          <li class="stack-item">UX Thinking</li><li class="stack-item">CRM</li><li class="stack-item">Digital Marketing</li><li class="stack-item">Content</li>
+        </ul>
+        <p class="project-impact">BioSpirit Spa · 2020–2021</p>
+      </article>
+
+      <article class="project-card">
+        <p class="project-num" aria-hidden="true">06 —</p>
+        <h3 class="project-title">Algae Biofuel Feasibility Research</h3>
+        <p class="project-desc">Contributed to applied research on sustainable biofuel production from algae. Owned COD and BOD laboratory testing protocols — developing hypothesis-driven thinking and a systems-level approach to resource constraints.</p>
+        <ul class="project-stack" aria-label="Methods and tools">
+          <li class="stack-item">Lab Research</li><li class="stack-item">Sustainability</li><li class="stack-item">COD/BOD Testing</li>
+        </ul>
+        <p class="project-impact">Cal Poly WEST Team · 2015</p>
+      </article>
+
+    </div>
+  </section>
+
+  <div class="depth-divider" aria-hidden="true"><span class="depth-reading">— 6000m — Abyssal Zone —</span></div>
+
+  <!-- CONTACT -->
+  <section id="contact" aria-labelledby="contact-heading">
+    <div class="contact-inner">
+      <p class="zone-label" style="position:relative;top:0;left:0;margin-bottom:20px;justify-content:center;" aria-hidden="true">Hadal Zone · 6000m+</p>
+      <p class="section-eyebrow" style="justify-content:center;" aria-hidden="true">Contact</p>
+      <h2 id="contact-heading">Let's go<br><em>deeper.</em></h2>
+      <p class="contact-desc">Whether you're building a product team, looking for a research partner, or want to talk about the intersection of science and design — I'd love to connect.</p>
+      <div class="contact-links">
+        <a href="mailto:rlamore2323@gmail.com" class="contact-btn primary">rlamore2323@gmail.com</a>
+        <a href="tel:4086938949" class="contact-btn">408-693-8949</a>
+        <a href="#" class="contact-btn" aria-label="Connect on LinkedIn (opens LinkedIn)">LinkedIn</a>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!-- ADA: footer landmark -->
+<footer role="contentinfo">
+  <p>© 2025 Rachael Lamore · South Lake Tahoe, CA</p>
+</footer>
+
+<script>
+// ── MOBILE NAV ──────────────────────────────────
+const navToggle  = document.getElementById('nav-toggle');
+const navLinks   = document.getElementById('nav-links');
+const navOverlay = document.getElementById('nav-overlay');
+function openNav() {
+  navLinks.classList.add('open'); navOverlay.classList.add('open');
+  navOverlay.removeAttribute('aria-hidden');
+  navToggle.setAttribute('aria-expanded','true');
+  navToggle.setAttribute('aria-label','Close navigation menu');
+  navToggle.textContent = 'Close';
+  navLinks.querySelector('a').focus();
+}
+function closeNav() {
+  navLinks.classList.remove('open'); navOverlay.classList.remove('open');
+  navOverlay.setAttribute('aria-hidden','true');
+  navToggle.setAttribute('aria-expanded','false');
+  navToggle.setAttribute('aria-label','Open navigation menu');
+  navToggle.textContent = 'Menu';
+}
+navToggle.addEventListener('click', () => navLinks.classList.contains('open') ? closeNav() : openNav());
+navOverlay.addEventListener('click', closeNav);
+navLinks.querySelectorAll('a').forEach(a => a.addEventListener('click', closeNav));
+document.addEventListener('keydown', e => { if (e.key==='Escape' && navLinks.classList.contains('open')) { closeNav(); navToggle.focus(); } });
+
+// ADA: Custom cursor only on real pointer devices; keyboard users keep native cursor
+if (window.matchMedia('(pointer: fine)').matches) {
+  document.body.classList.add('has-mouse');
+  const cursor = document.getElementById('cursor');
+  const ring = document.getElementById('cursor-ring');
+  let mx=0,my=0,rx=0,ry=0;
+  document.addEventListener('mousemove',e=>{ mx=e.clientX; my=e.clientY; cursor.style.left=mx+'px'; cursor.style.top=my+'px'; });
+  (function tick(){ rx+=(mx-rx)*0.14; ry+=(my-ry)*0.14; ring.style.left=rx+'px'; ring.style.top=ry+'px'; requestAnimationFrame(tick); })();
+  document.querySelectorAll('a,button,.project-card,.skill-chip').forEach(el=>{
+    el.addEventListener('mouseenter',()=>{ ring.style.width='60px'; ring.style.height='60px'; cursor.style.transform='translate(-50%,-50%) scale(1.5)'; });
+    el.addEventListener('mouseleave',()=>{ ring.style.width='36px'; ring.style.height='36px'; cursor.style.transform='translate(-50%,-50%) scale(1)'; });
+  });
+}
+
+// ADA: Respect prefers-reduced-motion — disable particles and animations
+const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const canvas = document.getElementById('particles-canvas');
+const ctx = canvas.getContext('2d');
+let W,H;
+function resize(){ W=canvas.width=window.innerWidth; H=canvas.height=window.innerHeight; }
+resize(); window.addEventListener('resize',resize);
+
+class Particle{
+  constructor(){this.reset();}
+  reset(){ this.x=Math.random()*W; this.y=Math.random()*H; this.vy=-(0.2+Math.random()*0.6); this.vx=(Math.random()-0.5)*0.3; this.r=0.5+Math.random()*2; this.alpha=0.1+Math.random()*0.5; this.wobble=Math.random()*Math.PI*2; this.glow=Math.random()<0.15; }
+  update(){ this.wobble+=0.02; this.x+=this.vx+Math.sin(this.wobble)*0.3; this.y+=this.vy; if(this.y<-10)this.reset(); }
+  draw(sf){
+    ctx.save();
+    if(this.glow&&sf>0.5){ const ga=Math.min((sf-0.5)*2,1); ctx.shadowBlur=12; ctx.shadowColor=`rgba(0,255,231,${ga*0.8})`; ctx.fillStyle=`rgba(0,255,231,${this.alpha*ga})`; }
+    else{ ctx.fillStyle=`rgba(255,255,255,${this.alpha*(1-sf*0.7)})`; }
+    ctx.beginPath(); ctx.arc(this.x,this.y,this.r,0,Math.PI*2); ctx.fill(); ctx.restore();
+  }
+}
+class Jellyfish{
+  constructor(){this.reset();}
+  reset(){ this.x=Math.random()*W; this.y=H+100; this.r=20+Math.random()*30; this.vy=-(0.3+Math.random()*0.5); this.phase=Math.random()*Math.PI*2; this.alpha=0.15+Math.random()*0.2; this.tentacles=6+Math.floor(Math.random()*4); }
+  update(){ this.phase+=0.04; this.y+=this.vy+Math.sin(this.phase*0.5)*0.2; this.x+=Math.sin(this.phase*0.3)*0.5; if(this.y<-100)this.reset(); }
+  draw(sf){
+    if(sf<0.55)return;
+    const ga=Math.min((sf-0.55)*3,1)*this.alpha;
+    ctx.save(); ctx.shadowBlur=20; ctx.shadowColor=`rgba(0,255,231,${ga})`;
+    const pulse=1+Math.sin(this.phase)*0.08;
+    ctx.beginPath(); ctx.ellipse(this.x,this.y,this.r*pulse,this.r*0.7*pulse,0,Math.PI,0);
+    const g=ctx.createRadialGradient(this.x,this.y-this.r*0.3,0,this.x,this.y,this.r);
+    g.addColorStop(0,`rgba(100,255,235,${ga*0.8})`); g.addColorStop(1,`rgba(0,100,150,${ga*0.2})`);
+    ctx.fillStyle=g; ctx.fill();
+    for(let i=0;i<this.tentacles;i++){ const tx=this.x+(i/(this.tentacles-1)-0.5)*this.r*1.4; const len=this.r*(1.5+Math.sin(this.phase+i)*0.3); ctx.beginPath(); ctx.moveTo(tx,this.y); ctx.quadraticCurveTo(tx+Math.sin(this.phase+i*1.3)*10,this.y+len*0.5,tx,this.y+len); ctx.strokeStyle=`rgba(0,255,231,${ga*0.4})`; ctx.lineWidth=0.8; ctx.stroke(); }
+    ctx.restore();
+  }
+}
+
+const particles = reducedMotion ? [] : Array.from({length:120},()=>new Particle());
+const jellies   = reducedMotion ? [] : Array.from({length:5},()=>new Jellyfish());
+let scrollFraction=0;
+(function loop(){ ctx.clearRect(0,0,W,H); particles.forEach(p=>{p.update();p.draw(scrollFraction);}); jellies.forEach(j=>{j.update();j.draw(scrollFraction);}); requestAnimationFrame(loop); })();
+
+// SCROLL
+const progressBar = document.getElementById('progress-bar');
+function onScroll(){
+  const st=window.scrollY, ms=document.body.scrollHeight-window.innerHeight;
+  scrollFraction = ms>0 ? st/ms : 0;
+  const pct = Math.round(scrollFraction*100);
+  document.getElementById('pressure-fill').style.width=pct+'%';
+  progressBar.setAttribute('aria-valuenow', pct);
+  const d=Math.round(scrollFraction*11000);
+  document.getElementById('depth-fill').style.height=pct+'%';
+  document.getElementById('depth-value').textContent=d>999?(d/1000).toFixed(1)+'km':d+'m';
+  document.getElementById('caustics').style.opacity=Math.max(0,1-scrollFraction*5);
+  if(st>80) document.getElementById('nav').classList.add('scrolled');
+  else document.getElementById('nav').classList.remove('scrolled');
+  document.querySelectorAll('.fade-in,.timeline-item,.project-card,.pub-item').forEach(el=>{
+    if(el.getBoundingClientRect().top < window.innerHeight*0.88) el.classList.add('visible');
+  });
+}
+
+// ADA: Mark fade-in elements as js-ready (so non-JS users always see content)
+document.querySelectorAll('.fade-in').forEach(el=>el.classList.add('js-ready'));
+
+window.addEventListener('scroll', onScroll, {passive:true});
+onScroll();
+setTimeout(()=>{ document.getElementById('caustics').style.opacity='1'; }, 200);
+document.querySelectorAll('.project-card').forEach((c,i)=>c.style.transitionDelay=(i*0.1)+'s');
+document.querySelectorAll('.timeline-item').forEach((t,i)=>t.style.transitionDelay=(i*0.15)+'s');
+document.querySelectorAll('.pub-item').forEach((p,i)=>p.style.transitionDelay=(i*0.12)+'s');
+</script>
+</body>
+</html>
